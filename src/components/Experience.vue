@@ -5,11 +5,11 @@
       <div class="section-header">
         <h2>
           My Internship at <br>
-          <span class="accent">Circuit Solutions Inc.</span>
+          <span class="accent">Nebula Stack Labs</span>
         </h2>
 
         <p class="subtitle">
-          Junior Web Developer · Dec 2025 – Mar 2026
+          UI Engineering Intern · Jan 2026 – Apr 2026
         </p>
       </div>
 
@@ -46,23 +46,23 @@
   const items = [
     {
       title: 'Onboarding',
-      date: 'Dec 2025 – Jan 2026',
-      description: 'I was introduced to the company\'s workflow, tools, and development practices. During this time, I also learned the core technologies used by the team, including <strong>Vuetify</strong> and <strong>Laravel</strong>.',
+      date: 'Jan 2026',
+      description: 'I was introduced to the team\'s design system, workflow, and development practices. During this time, I also learned the core technologies used by the team, including <strong>Figma</strong>, <strong>Vue.js</strong>, and <strong>Tailwind CSS</strong>.',
     },
     {
       title: 'Project Assignment',
-      date: 'Jan 2026',
-      description: 'After onboarding, I was assigned to a web development project and introduced to the system\'s goals and requirements.',
+      date: 'Feb 2026',
+      description: 'After onboarding, I was assigned to a dashboard redesign project and introduced to the product goals and technical requirements.',
     },
     {
       title: 'Design Phase',
-      date: 'Jan 2026 – Feb 2026',
-      description: 'I joined weekly stakeholder meetings where we presented the website prototype and gathered feedback to refine the design and improve the overall user experience.',
+      date: 'Feb 2026 – Mar 2026',
+      description: 'I joined weekly design reviews where we presented interface prototypes and gathered feedback to refine the layout and improve the overall user experience.',
     },
     {
       title: 'Implementation Phase',
-      date: 'March 2026',
-      description: 'I implemented the approved prototype using <strong>Vue.js</strong> and <strong>Vuetify</strong>, building responsive UI components with <strong>JavaScript, HTML, and CSS</strong>.',
+      date: 'Apr 2026',
+      description: 'I implemented the approved prototype using <strong>Vue.js</strong>, <strong>TypeScript</strong>, and <strong>Tailwind CSS</strong>, building responsive UI components with <strong>HTML</strong> and accessibility in mind.',
     },
   ]
 

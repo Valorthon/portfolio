@@ -17,26 +17,26 @@
         <div class="contact-info">
           <a
             class="contact-item"
-            href="mailto:mychalpejana.mp@gmail.com"
+            href="mailto:alex.riven@example.com"
             rel="noopener noreferrer"
           >
             <v-icon class="contact-icon">mdi-email</v-icon>
-            <span>mychalpejana.mp@gmail.com</span>
+            <span>alex.riven@example.com</span>
           </a>
 
           <a
             class="contact-item"
-            href="https://github.com/saltinstillwaters"
+            href="https://github.com/alexriven-dev"
             rel="noopener noreferrer"
             target="_blank"
           >
             <v-icon class="contact-icon">mdi-github</v-icon>
-            <span>github.com/saltinstillwaters</span>
+            <span>github.com/alexriven-dev</span>
           </a>
 
-          <a class="contact-item" href="tel:+639554813800">
+          <a class="contact-item" href="tel:+639123456789">
             <v-icon class="contact-icon">mdi-phone</v-icon>
-            <span>09554813800</span>
+            <span>09123456789</span>
           </a>
         </div>
 

@@ -2,7 +2,7 @@
   <footer class="app-footer">
     <v-container class="footer-inner">
       <div class="footer-left">
-        <span class="footer-name">Mychal Pejana</span>
+        <span class="footer-name">Alex Riven</span>
         <span class="footer-year">© {{ currentYear }}</span>
       </div>
 
@@ -27,8 +27,8 @@
   const currentYear = new Date().getFullYear()
 
   const links = [
-    { href: 'https://github.com/saltinstillwaters', icon: 'mdi-github', label: 'GitHub' },
-    { href: 'mailto:mychalpejana.mp@gmail.com', icon: 'mdi-email', label: 'Email' },
+    { href: 'https://github.com/alexriven-dev', icon: 'mdi-github', label: 'GitHub' },
+    { href: 'mailto:alex.riven@example.com', icon: 'mdi-email', label: 'Email' },
   ]
 </script>
 

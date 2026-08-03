@@ -7,9 +7,9 @@
       <!-- TITLE -->
       <div class="text-center hero-text">
         <h1 class="hero-title">
-          I'm <span class="accent">Mychal</span>,
+          I'm <span class="accent">Alex</span>,
           <br>
-          Software Developer
+          Frontend Engineer
         </h1>
       </div>
 
@@ -19,7 +19,7 @@
           <div aria-hidden="true" class="quote-icon">“</div>
 
           <p>
-            A 4th year student in Computer Science looking for his next internship as a software developer.
+            A 3rd year student in Information Technology looking for his next internship as a frontend engineer.
           </p>
         </div>
 
@@ -35,7 +35,7 @@
         <div aria-hidden="true" class="circle" />
 
         <v-img
-          alt="Portrait of Mychal Pejana"
+          alt="Portrait of Alex Riven"
           class="hero-image"
           eager
           src="@/assets/images/portrait-cropped.png"

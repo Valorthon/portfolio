@@ -23,10 +23,10 @@
       <!-- CENTER LOGO -->
       <a class="logo" href="#about" @click.prevent="scrollTo('about')">
         <v-avatar aria-hidden="true" color="#FD853A" size="32">
-          <span class="text-white font-weight-bold">MP</span>
+          <span class="text-white font-weight-bold">AR</span>
         </v-avatar>
 
-        <span class="logo-text pl-2">MPejana</span>
+        <span class="logo-text pl-2">ARiven</span>
       </a>
 
       <!-- RIGHT NAV (desktop) -->
@@ -382,11 +382,20 @@
   align-items: center;
   gap: 4px;
   min-width: 0;
-  max-width: 500px;
   overflow: hidden;
   transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.35s ease,
     transform 0.35s ease;
+  flex: 1 1 0;
+  justify-content: center;
+}
+
+.desktop-nav.left-nav {
+  justify-content: flex-end;
+}
+
+.desktop-nav.right-nav {
+  justify-content: flex-start;
 }
 
 .floating-appbar:not(.is-scrolled) .desktop-nav {
@@ -408,7 +417,7 @@
 }
 
 .floating-appbar.is-scrolled.is-expanded .desktop-nav {
-  max-width: 500px;
+  max-width: 100%;
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
