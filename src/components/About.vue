@@ -37,6 +37,7 @@
         <v-img
           alt="Portrait of Mychal Pejana"
           class="hero-image"
+          eager
           src="@/assets/images/portrait-cropped.png"
           width="380"
         />

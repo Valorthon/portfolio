@@ -1,13 +1,19 @@
 <template>
-  <header class="floating-appbar" :class="{ 'is-scrolled': isScrolled }">
+  <header
+    ref="headerRef"
+    class="floating-appbar"
+    :class="{ 'is-scrolled': isScrolled, 'is-expanded': isExpanded, 'is-loaded': isLoaded }"
+  >
     <nav aria-label="Main navigation" class="nav-inner">
       <!-- LEFT NAV (desktop) -->
       <div class="desktop-nav left-nav">
         <button
           v-for="item in leftItems"
           :key="item.id"
+          :aria-current="activeId === item.id ? 'page' : undefined"
           class="nav-btn"
           :class="{ active: activeId === item.id }"
+          :data-nav-id="item.id"
           @click="scrollTo(item.id)"
         >
           {{ item.label }}
@@ -28,12 +34,23 @@
         <button
           v-for="item in rightItems"
           :key="item.id"
+          :aria-current="activeId === item.id ? 'page' : undefined"
           class="nav-btn"
           :class="{ active: activeId === item.id }"
+          :data-nav-id="item.id"
           @click="scrollTo(item.id)"
         >
           {{ item.label }}
         </button>
+
+        <v-btn
+          class="hire-btn"
+          href="#contact"
+          size="small"
+          @click.prevent="scrollTo('contact')"
+        >
+          Hire me
+        </v-btn>
       </div>
 
       <!-- MOBILE MENU BUTTON -->
@@ -44,10 +61,17 @@
         class="mobile-menu-btn"
         @click="mobileOpen = !mobileOpen"
       >
-        <v-icon color="white" size="28">
+        <v-icon color="#1a1a1a" size="28">
           {{ mobileOpen ? 'mdi-close' : 'mdi-menu' }}
         </v-icon>
       </button>
+
+      <!-- SLIDING ACTIVE INDICATOR -->
+      <span
+        aria-hidden="true"
+        class="active-indicator"
+        :style="indicatorStyle"
+      />
     </nav>
 
     <!-- MOBILE DRAWER -->
@@ -55,24 +79,42 @@
       <div
         v-show="mobileOpen"
         id="mobile-nav"
+        ref="mobileDrawerRef"
         class="mobile-drawer"
       >
         <button
           v-for="item in allItems"
           :key="item.id"
+          :aria-current="activeId === item.id ? 'page' : undefined"
           class="mobile-nav-btn"
           :class="{ active: activeId === item.id }"
           @click="onMobileClick(item.id)"
         >
           {{ item.label }}
         </button>
+
+        <v-btn
+          block
+          class="mobile-hire-btn"
+          href="#contact"
+          size="large"
+          @click.prevent="onMobileHireClick"
+        >
+          Hire me
+        </v-btn>
       </div>
     </transition>
   </header>
 </template>
 
 <script setup lang="ts">
-  import { onMounted, onUnmounted, ref } from 'vue'
+  import {
+    nextTick,
+    onMounted,
+    onUnmounted,
+    ref,
+    watch,
+  } from 'vue'
   import { useScrollSpy } from '@/composables/useScrollSpy'
 
   const leftItems = [
@@ -93,43 +135,196 @@
 
   const { activeId, scrollTo } = useScrollSpy(allItems.map(i => i.id), 96)
 
+  const headerRef = ref<HTMLElement | null>(null)
+  const mobileDrawerRef = ref<HTMLElement | null>(null)
   const mobileOpen = ref(false)
   const isScrolled = ref(false)
+  const isExpanded = ref(false)
+  const isLoaded = ref(false)
+
+  const indicatorStyle = ref({
+    left: '0px',
+    width: '0px',
+    opacity: '0',
+  })
 
   function onMobileClick (id: string) {
     mobileOpen.value = false
     scrollTo(id)
   }
 
+  function onMobileHireClick () {
+    mobileOpen.value = false
+    scrollTo('contact')
+  }
+
+  function closeMobile () {
+    mobileOpen.value = false
+  }
+
+  function expand () {
+    isExpanded.value = true
+  }
+
+  function collapse () {
+    isExpanded.value = false
+  }
+
   function onScroll () {
     isScrolled.value = window.scrollY > 20
   }
 
+  function updateIndicator () {
+    if (!headerRef.value) return
+
+    const activeBtn = headerRef.value.querySelector(
+      `.nav-btn[data-nav-id="${CSS.escape(activeId.value)}"]`,
+    ) as HTMLElement | null
+
+    if (!activeBtn) {
+      indicatorStyle.value.opacity = '0'
+      return
+    }
+
+    const navRect = headerRef.value.querySelector('.nav-inner')!.getBoundingClientRect()
+    const btnRect = activeBtn.getBoundingClientRect()
+
+    indicatorStyle.value = {
+      left: `${btnRect.left - navRect.left}px`,
+      width: `${btnRect.width}px`,
+      opacity: '1',
+    }
+  }
+
+  function onKeydown (event: KeyboardEvent) {
+    if (event.key === 'Escape' && mobileOpen.value) {
+      closeMobile()
+    }
+  }
+
+  function onDocumentClick (event: MouseEvent) {
+    if (!mobileOpen.value) return
+
+    const target = event.target as Node
+    const menuBtn = headerRef.value?.querySelector('.mobile-menu-btn')
+
+    if (
+      mobileDrawerRef.value
+      && !mobileDrawerRef.value.contains(target)
+      && menuBtn
+      && !menuBtn.contains(target)
+    ) {
+      closeMobile()
+    }
+  }
+
+  function onResize () {
+    nextTick(updateIndicator)
+  }
+
+  function onTransitionEnd (event: TransitionEvent) {
+    if (['grid-template-columns', 'max-width', 'padding'].includes(event.propertyName)) {
+      nextTick(updateIndicator)
+    }
+  }
+
   onMounted(() => {
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('keydown', onKeydown)
+    window.addEventListener('click', onDocumentClick)
+    window.addEventListener('resize', onResize)
+    headerRef.value?.addEventListener('transitionend', onTransitionEnd)
+    headerRef.value?.addEventListener('mouseenter', expand)
+    headerRef.value?.addEventListener('mouseleave', collapse)
+    onScroll()
+
+    // Trigger entrance animation and initial indicator placement
+    requestAnimationFrame(() => {
+      isLoaded.value = true
+      nextTick(updateIndicator)
+    })
   })
 
   onUnmounted(() => {
     window.removeEventListener('scroll', onScroll)
+    window.removeEventListener('keydown', onKeydown)
+    window.removeEventListener('click', onDocumentClick)
+    window.removeEventListener('resize', onResize)
+    headerRef.value?.removeEventListener('transitionend', onTransitionEnd)
+    headerRef.value?.removeEventListener('mouseenter', expand)
+    headerRef.value?.removeEventListener('mouseleave', collapse)
+  })
+
+  watch(activeId, () => nextTick(updateIndicator))
+  watch(mobileOpen, isOpen => {
+    document.body.style.overflow = isOpen ? 'hidden' : ''
   })
 </script>
 
 <style scoped>
 .floating-appbar {
-  width: min(1100px, calc(100% - 32px));
+  width: calc(100% - 32px);
+  max-width: 1100px;
   margin: 16px auto;
-  background-color: rgba(0, 0, 0, 0.92);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 50px;
   height: var(--header-height);
   position: sticky;
   top: 16px;
   z-index: 100;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: box-shadow 0.25s ease, background-color 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+  transform: translateY(-120%);
+  opacity: 0;
+}
+
+.floating-appbar.is-loaded {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.6s ease,
+    max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
 }
 
 .floating-appbar.is-scrolled {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  max-width: 160px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.floating-appbar.is-scrolled:not(.is-expanded) {
+  transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.floating-appbar.is-scrolled.is-expanded {
+  max-width: 1100px;
+  height: var(--header-height);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .floating-appbar.is-scrolled {
+    max-width: 1100px;
+    height: 56px;
+  }
 }
 
 .nav-inner {
@@ -138,13 +333,33 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 12px;
+  position: relative;
+  transition: grid-template-columns 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 769px) {
+  .nav-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .left-nav {
+    justify-self: end;
+    padding-right: 16px;
+  }
+
+  .right-nav {
+    justify-self: start;
+    padding-left: 16px;
+  }
 }
 
 .logo {
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: white;
+  color: #1a1a1a;
 }
 
 .logo-text {
@@ -155,30 +370,119 @@
 .desktop-nav {
   display: flex;
   align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.floating-appbar:not(.is-scrolled) .desktop-nav {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.floating-appbar.is-scrolled .desktop-nav {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.floating-appbar.is-scrolled.is-expanded .desktop-nav {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition: opacity 0.35s ease,
+    transform 0.35s ease;
 }
 
 .nav-btn {
+  position: relative;
+  z-index: 2;
   text-transform: none;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.85);
+  color: #444;
   background: transparent;
   border: none;
   border-radius: 30px;
   min-height: 44px;
   padding: 0 20px;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  transition: color 0.25s ease;
+  white-space: nowrap;
 }
 
 .nav-btn:hover,
 .nav-btn:focus-visible {
-  color: white;
-  background-color: rgba(255, 255, 255, 0.1);
+  color: #1a1a1a;
 }
 
 .nav-btn.active {
-  color: white;
-  background-color: rgba(255, 122, 47, 0.2);
+  color: #1a1a1a;
+}
+
+.active-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 36px;
+  background: rgba(255, 122, 47, 0.18);
+  border-radius: 30px;
+  z-index: 1;
+  pointer-events: none;
+  transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+}
+
+.floating-appbar.is-scrolled .active-indicator {
+  opacity: 0;
+}
+
+.floating-appbar.is-scrolled.is-expanded .active-indicator {
+  opacity: 1;
+  transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s ease 0.35s;
+}
+
+@media (min-width: 769px) {
+  .floating-appbar.is-scrolled .nav-inner {
+    grid-template-columns: 0fr auto 0fr;
+    justify-content: center;
+    padding: 0;
+    transition: grid-template-columns 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .floating-appbar.is-scrolled.is-expanded .nav-inner {
+    grid-template-columns: 1fr auto 1fr;
+    padding: 0 12px;
+    transition: grid-template-columns 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+.hire-btn {
+  margin-left: 8px;
+  text-transform: none;
+  font-weight: 600;
+  color: white !important;
+  background: #ff7a2f !important;
+  border-radius: 30px !important;
+  padding: 0 22px !important;
+  letter-spacing: 0;
+  box-shadow: 0 4px 14px rgba(255, 122, 47, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+  white-space: nowrap;
+}
+
+.hire-btn:hover {
+  background: #e86a22 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 122, 47, 0.45);
 }
 
 .mobile-menu-btn {
@@ -188,11 +492,12 @@
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
+  transition: background-color 0.2s ease;
 }
 
 .mobile-menu-btn:hover,
 .mobile-menu-btn:focus-visible {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.06);
 }
 
 .mobile-drawer {
@@ -201,10 +506,13 @@
   top: calc(100% + 12px);
   left: 12px;
   right: 12px;
-  background: rgba(0, 0, 0, 0.96);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 24px;
   padding: 16px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
   flex-direction: column;
   gap: 4px;
 }
@@ -214,7 +522,7 @@
   text-transform: none;
   font-weight: 500;
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: #444;
   background: transparent;
   border: none;
   border-radius: 14px;
@@ -226,13 +534,24 @@
 .mobile-nav-btn:hover,
 .mobile-nav-btn:focus-visible,
 .mobile-nav-btn.active {
-  color: white;
-  background-color: rgba(255, 122, 47, 0.2);
+  color: #1a1a1a;
+  background-color: rgba(255, 122, 47, 0.12);
+}
+
+.mobile-hire-btn {
+  margin-top: 8px;
+  text-transform: none;
+  font-weight: 600;
+  color: white !important;
+  background: #ff7a2f !important;
+  border-radius: 14px !important;
+  letter-spacing: 0;
+  box-shadow: 0 4px 14px rgba(255, 122, 47, 0.35);
 }
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .slide-enter-from,
@@ -246,9 +565,17 @@
     display: none;
   }
 
+  .active-indicator {
+    display: none;
+  }
+
   .mobile-menu-btn,
   .mobile-drawer {
     display: flex;
+  }
+
+  .mobile-drawer {
+    flex-direction: column;
   }
 }
 </style>
