@@ -296,7 +296,7 @@
 }
 
 .floating-appbar.is-scrolled {
-  max-width: 160px;
+  max-width: 180px;
   height: 50px;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
@@ -464,7 +464,7 @@
 @media (min-width: 769px) {
   .floating-appbar.is-scrolled .nav-inner {
     justify-content: center;
-    padding: 0;
+    padding: 0 16px;
   }
 
   .floating-appbar.is-scrolled.is-expanded .nav-inner {
