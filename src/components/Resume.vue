@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-  const resumePath = '/Pejana_Resume_Software_Engineer_Intern.pdf'
+  const resumePath = '/Resume.pdf'
 </script>
 
 <style scoped>

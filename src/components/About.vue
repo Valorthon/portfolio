@@ -47,7 +47,7 @@
           <v-btn
             class="btn-primary"
             download
-            href="/Pejana_Resume_Software_Engineer_Intern.pdf"
+            href="/Resume.pdf"
             size="large"
             target="_blank"
           >
