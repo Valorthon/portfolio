@@ -12,11 +12,10 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     About: typeof import('./components/About.vue')['default']
+    AppFooter: typeof import('./components/AppFooter.vue')['default']
     AppHeader: typeof import('./components/AppHeader.vue')['default']
     Contact: typeof import('./components/Contact.vue')['default']
     Experience: typeof import('./components/Experience.vue')['default']
-    Header: typeof import('./components/Header.vue')['default']
-    HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     ProjectOverlay: typeof import('./components/ProjectOverlay.vue')['default']
     Projects: typeof import('./components/Projects.vue')['default']
     Resume: typeof import('./components/Resume.vue')['default']

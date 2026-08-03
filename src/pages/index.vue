@@ -5,7 +5,7 @@
   </section>
 
   <section id="projects">
-    <Projects @onClick="projectClick" />
+    <Projects @select="projectClick" />
   </section>
 
   <ProjectOverlay
@@ -28,14 +28,14 @@
 
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+  import { ref } from 'vue'
 
-const projectId = ref(0)
-const openOverlay = ref(false)
+  const projectId = ref(0)
+  const openOverlay = ref(false)
 
-function projectClick(i) {
-  openOverlay.value = true
-  projectId.value = i
-}
+  function projectClick (i: number) {
+    openOverlay.value = true
+    projectId.value = i
+  }
 </script>
