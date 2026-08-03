@@ -124,7 +124,6 @@
 
   const rightItems = [
     { id: 'resume', label: 'Resume' },
-    { id: 'contact', label: 'Contact Me' },
   ]
 
   const allItems = [
@@ -452,13 +451,6 @@
 
 .floating-appbar.is-scrolled .active-indicator {
   opacity: 0;
-}
-
-.floating-appbar.is-scrolled.is-expanded .active-indicator {
-  opacity: 1;
-  transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.3s ease 0.35s;
 }
 
 @media (min-width: 769px) {
