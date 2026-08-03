@@ -94,7 +94,13 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, onUnmounted, ref } from 'vue'
+  import {
+    computed,
+    nextTick,
+    onMounted,
+    onUnmounted,
+    ref,
+  } from 'vue'
 
   const emit = defineEmits<{
     (e: 'select', id: number): void
@@ -102,6 +108,7 @@
 
   const slider = ref<HTMLElement | null>(null)
   const currentPage = ref(0)
+  const itemsPerPage = ref(1)
 
   const projects = [
     { title: 'TalkBoard', images: ['/TalkboardPoster.png'] },
@@ -112,66 +119,137 @@
     { title: 'Enrollment System API', images: ['/enroll.png'] },
   ]
 
-  const itemsPerPage = 3
+  const GAP = 30
 
-  const totalPages = computed(() => Math.ceil(projects.length / itemsPerPage))
+  const totalPages = computed(() => Math.ceil(projects.length / itemsPerPage.value))
 
   function onClick (projectId: number) {
     emit('select', projectId)
   }
 
-  function getScrollStep () {
-    if (!slider.value) return 0
+  function getMetrics () {
+    if (!slider.value) return null
     const firstCard = slider.value.querySelector('.service-card') as HTMLElement | null
-    const gap = 30
-    return firstCard ? firstCard.offsetWidth + gap : slider.value.clientWidth / itemsPerPage
+    if (!firstCard) return null
+    const cardWidth = firstCard.offsetWidth
+    return { cardWidth, step: cardWidth + GAP }
+  }
+
+  function getItemsPerPage () {
+    if (!slider.value) return 1
+    const metrics = getMetrics()
+    if (!metrics) return 1
+    return Math.max(1, Math.floor((slider.value.clientWidth + GAP) / metrics.step))
+  }
+
+  function updateItemsPerPage () {
+    itemsPerPage.value = getItemsPerPage()
+    currentPage.value = Math.min(currentPage.value, totalPages.value - 1)
+  }
+
+  let snapRestoreTimer: ReturnType<typeof setTimeout> | null = null
+
+  function enableSnap () {
+    if (snapRestoreTimer) {
+      clearTimeout(snapRestoreTimer)
+      snapRestoreTimer = null
+    }
+    if (!slider.value) return
+    slider.value.style.scrollSnapType = ''
+  }
+
+  function disableSnap () {
+    if (snapRestoreTimer) {
+      clearTimeout(snapRestoreTimer)
+      snapRestoreTimer = null
+    }
+    if (!slider.value) return
+    slider.value.style.scrollSnapType = 'none'
+  }
+
+  function scrollToPage (page: number, smooth = true) {
+    if (!slider.value) return
+    const metrics = getMetrics()
+    if (!metrics) return
+    page = Math.max(0, Math.min(page, totalPages.value - 1))
+    currentPage.value = page
+    const target = page * itemsPerPage.value * metrics.step
+    disableSnap()
+    slider.value.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'auto' })
+    slider.value.addEventListener('scrollend', enableSnap, { once: true })
+    snapRestoreTimer = setTimeout(() => enableSnap(), smooth ? 600 : 50)
   }
 
   function nextPage () {
-    if (!slider.value || currentPage.value >= totalPages.value - 1) return
-    slider.value.scrollBy({ left: getScrollStep(), behavior: 'smooth' })
+    scrollToPage(currentPage.value + 1)
   }
 
   function prevPage () {
-    if (!slider.value || currentPage.value <= 0) return
-    slider.value.scrollBy({ left: -getScrollStep(), behavior: 'smooth' })
+    scrollToPage(currentPage.value - 1)
   }
 
   function goToPage (page: number) {
+    scrollToPage(page)
+  }
+
+  function onScrollEnd () {
     if (!slider.value) return
-    currentPage.value = page
-    slider.value.scrollTo({ left: page * getScrollStep() * itemsPerPage, behavior: 'smooth' })
+    const maxScroll = slider.value.scrollWidth - slider.value.clientWidth
+
+    // If we're at the far right, always treat it as the last page.
+    // This avoids the "one extra click" bug when the final page doesn't
+    // fully fill the viewport.
+    if (slider.value.scrollLeft >= maxScroll - 1) {
+      currentPage.value = totalPages.value - 1
+      return
+    }
+
+    const metrics = getMetrics()
+    if (!metrics) return
+    const pageStep = itemsPerPage.value * metrics.step
+    if (pageStep <= 0) return
+    currentPage.value = Math.round(slider.value.scrollLeft / pageStep)
+    currentPage.value = Math.max(0, Math.min(currentPage.value, totalPages.value - 1))
   }
 
   let scrollTimeout: ReturnType<typeof setTimeout> | null = null
 
   function onScroll () {
-    if (!slider.value) return
     if (scrollTimeout) clearTimeout(scrollTimeout)
-    scrollTimeout = setTimeout(() => {
-      const step = getScrollStep()
-      if (step > 0) {
-        currentPage.value = Math.round(slider.value!.scrollLeft / (step * itemsPerPage))
-      }
-    }, 100)
+    scrollTimeout = setTimeout(onScrollEnd, 150)
   }
 
-  function updateItemsPerPage () {
-    if (!slider.value) return
-    // Recalculate currentPage to stay within bounds after resize
-    const step = getScrollStep()
-    if (step > 0) {
-      currentPage.value = Math.round(slider.value.scrollLeft / (step * itemsPerPage))
-    }
+  let resizeTimeout: ReturnType<typeof setTimeout> | null = null
+
+  function onResize () {
+    if (resizeTimeout) clearTimeout(resizeTimeout)
+    resizeTimeout = setTimeout(() => {
+      const previous = itemsPerPage.value
+      updateItemsPerPage()
+      if (itemsPerPage.value === previous) {
+        onScrollEnd()
+      } else {
+        scrollToPage(currentPage.value, false)
+      }
+    }, 150)
   }
 
   onMounted(() => {
-    window.addEventListener('resize', updateItemsPerPage)
+    nextTick(() => {
+      updateItemsPerPage()
+    })
+    window.addEventListener('resize', onResize)
+    slider.value?.addEventListener('scrollend', onScrollEnd)
+    slider.value?.addEventListener('scroll', onScroll)
   })
 
   onUnmounted(() => {
-    window.removeEventListener('resize', updateItemsPerPage)
+    window.removeEventListener('resize', onResize)
+    slider.value?.removeEventListener('scrollend', onScrollEnd)
+    slider.value?.removeEventListener('scroll', onScroll)
     if (scrollTimeout) clearTimeout(scrollTimeout)
+    if (resizeTimeout) clearTimeout(resizeTimeout)
+    if (snapRestoreTimer) clearTimeout(snapRestoreTimer)
   })
 </script>
 
@@ -218,6 +296,7 @@
 .slider-wrapper {
   position: relative;
   margin-top: 60px;
+  padding: 0 64px;
 }
 
 .slider {
@@ -226,7 +305,7 @@
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   gap: 30px;
-  padding: 8px 4px;
+  padding: 8px 0;
   /* Hide scrollbar visually */
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -245,6 +324,7 @@
 .service-card {
   flex: 0 0 auto;
   width: min(320px, 85vw);
+  max-width: 100%;
   scroll-snap-align: start;
   cursor: pointer;
   padding: 30px;
@@ -254,6 +334,18 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
   transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .service-card {
+    width: calc((100% - 30px) / 2);
+  }
+}
+
+@media (min-width: 1025px) {
+  .service-card {
+    width: calc((100% - 60px) / 3);
+  }
 }
 
 .service-card:hover,
@@ -343,11 +435,11 @@
 }
 
 .nav-arrow.left {
-  left: -60px;
+  left: 0;
 }
 
 .nav-arrow.right {
-  right: -60px;
+  right: 0;
 }
 
 /* DOTS */
@@ -381,16 +473,8 @@
 
 /* TABLET */
 @media (max-width: 1200px) {
-  .nav-arrow.left {
-    left: 0;
-  }
-
-  .nav-arrow.right {
-    right: 0;
-  }
-
   .slider-wrapper {
-    padding: 0 24px;
+    padding: 0 48px;
   }
 }
 
@@ -403,6 +487,7 @@
 
   .slider-wrapper {
     margin-top: 40px;
+    padding: 0 12px;
   }
 
   .nav-arrow {
