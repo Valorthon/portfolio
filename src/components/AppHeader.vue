@@ -223,7 +223,7 @@
   }
 
   function onTransitionEnd (event: TransitionEvent) {
-    if (['grid-template-columns', 'max-width', 'padding'].includes(event.propertyName)) {
+    if (['max-width', 'padding'].includes(event.propertyName)) {
       nextTick(updateIndicator)
     }
   }
@@ -263,8 +263,8 @@
 
 <style scoped>
 .floating-appbar {
-  width: calc(100% - 32px);
-  max-width: 1100px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
   margin: 16px auto;
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(16px);
@@ -310,7 +310,7 @@
 }
 
 .floating-appbar.is-scrolled.is-expanded {
-  max-width: 1100px;
+  max-width: fit-content;
   height: var(--header-height);
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -321,6 +321,10 @@
 }
 
 @media (max-width: 768px) {
+  .floating-appbar {
+    width: calc(100% - 32px);
+  }
+
   .floating-appbar.is-scrolled {
     max-width: 1100px;
     height: 56px;
@@ -331,27 +335,27 @@
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 12px;
   position: relative;
-  transition: grid-template-columns 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (min-width: 769px) {
-  .nav-inner {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-  }
-
   .left-nav {
-    justify-self: end;
-    padding-right: 16px;
+    margin-right: 16px;
   }
 
   .right-nav {
-    justify-self: start;
-    padding-left: 16px;
+    margin-left: 16px;
+  }
+
+  .floating-appbar.is-scrolled .left-nav {
+    margin-right: 0;
+  }
+
+  .floating-appbar.is-scrolled .right-nav {
+    margin-left: 0;
   }
 }
 
@@ -372,29 +376,38 @@
   align-items: center;
   gap: 4px;
   min-width: 0;
+  max-width: 500px;
   overflow: hidden;
+  transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease,
+    transform 0.35s ease;
 }
 
 .floating-appbar:not(.is-scrolled) .desktop-nav {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.35s ease,
+  transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease,
     transform 0.35s ease;
 }
 
 .floating-appbar.is-scrolled .desktop-nav {
+  max-width: 0;
   opacity: 0;
   transform: translateY(6px);
   pointer-events: none;
-  transition: opacity 0.25s ease,
+  transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.25s ease,
     transform 0.25s ease;
 }
 
 .floating-appbar.is-scrolled.is-expanded .desktop-nav {
+  max-width: 500px;
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
-  transition: opacity 0.35s ease,
+  transition: max-width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease,
     transform 0.35s ease;
 }
 
@@ -450,18 +463,12 @@
 
 @media (min-width: 769px) {
   .floating-appbar.is-scrolled .nav-inner {
-    grid-template-columns: 0fr auto 0fr;
     justify-content: center;
     padding: 0;
-    transition: grid-template-columns 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-      padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .floating-appbar.is-scrolled.is-expanded .nav-inner {
-    grid-template-columns: 1fr auto 1fr;
     padding: 0 12px;
-    transition: grid-template-columns 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      padding 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
