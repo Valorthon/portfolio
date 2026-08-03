@@ -141,7 +141,11 @@
   const isExpanded = ref(false)
   const isLoaded = ref(false)
 
-  const indicatorStyle = ref({
+  const indicatorStyle = ref<{
+    left: string
+    width: string
+    opacity?: string
+  }>({
     left: '0px',
     width: '0px',
     opacity: '0',
@@ -181,7 +185,11 @@
     ) as HTMLElement | null
 
     if (!activeBtn) {
-      indicatorStyle.value.opacity = '0'
+      indicatorStyle.value = {
+        left: '0px',
+        width: '0px',
+        opacity: '0',
+      }
       return
     }
 
@@ -191,7 +199,6 @@
     indicatorStyle.value = {
       left: `${btnRect.left - navRect.left}px`,
       width: `${btnRect.width}px`,
-      opacity: '1',
     }
   }
 
